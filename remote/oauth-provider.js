@@ -86,6 +86,8 @@ class SupabaseClientsStore {
 
     return {
       client_id:                  data.id,
+      client_secret:              data.client_secret ?? undefined,
+      client_secret_expires_at:   client.client_secret_expires_at,
       redirect_uris:              data.redirect_uris,
       grant_types:                data.grant_types,
       response_types:             data.response_types,
