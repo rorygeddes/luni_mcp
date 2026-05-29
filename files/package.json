@@ -1,0 +1,19 @@
+{
+  "name": "luni-mcp",
+  "version": "0.1.0",
+  "description": "MCP server exposing Luni Financial data to Claude. Calls the existing Luni Express backend; holds no secrets of its own.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
