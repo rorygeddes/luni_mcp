@@ -1,0 +1,10 @@
+node_modules/
+files/node_modules/
+.DS_Store
+files.zip
+
+# Local dev helper — contains service role key; never commit
+get-token.js
+
+.env
+.env.*

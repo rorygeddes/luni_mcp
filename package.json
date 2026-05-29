@@ -1,0 +1,22 @@
+{
+  "name": "luni-mcp",
+  "version": "0.3.0",
+  "description": "Luni Financial MCP server — local stdio (v1) and remote OAuth/HTTP (v3).",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start":        "node server.js",
+    "dev":          "node --watch server.js",
+    "start:remote": "node remote/server.js",
+    "dev:remote":   "node --watch remote/server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "@supabase/supabase-js": "^2.49.0",
+    "axios": "^1.6.0",
+    "express": "^5.2.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
