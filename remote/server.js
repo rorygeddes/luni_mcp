@@ -26,7 +26,7 @@ import { mcpAuthRouter }                      from '@modelcontextprotocol/sdk/se
 import { requireBearerAuth }                  from '@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 
-import { LuniOAuthProvider, handleLoginSubmit, getSupabaseJwtForMcpToken }
+import { LuniOAuthProvider, handleLoginSubmit, handleGoogleComplete, getSupabaseJwtForMcpToken }
   from './oauth-provider.js';
 
 // ── Tool registry (same files as stdio server — no duplication) ───────────────
@@ -87,9 +87,11 @@ app.use(mcpAuthRouter({
   resourceName:      'Luni Financial',
 }));
 
-// ── Login form submit ─────────────────────────────────────────────────────────
-// The login.html form POSTs here. Separate from the SDK-managed /oauth/authorize.
+// ── Login form submit (email/password path) ───────────────────────────────────
 app.post('/oauth/login', handleLoginSubmit);
+
+// ── Google OAuth completion (called by login.html JS after Google redirect) ───
+app.post('/oauth/google-complete', handleGoogleComplete);
 
 // ── MCP endpoint ──────────────────────────────────────────────────────────────
 // Each request is stateless: a fresh Server + Transport is created, used,

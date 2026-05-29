@@ -4,7 +4,32 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sign in to Luni</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <style>
+    /* ── Exact Luni design tokens (from colors_and_type.css) ── */
+    :root {
+      --dark:        #1A1612;
+      --brown:       #9C8964;
+      --sand:        #DCC9A0;
+      --tan:         #B8A782;
+      --ink-mid:     #6B6256;
+      --ink-light:   #B0A59A;
+      --cream:       #FFFFFF;
+      --gold-start:  #F3F0EA;
+      --gold-end:    #C4BA9F;
+      --gold-border: #B0A590;
+      --card:        #F5F4F2;
+      --card-border: #EAE6E0;
+      --error:       #DC2626;
+      --error-bg:    #FEF2F2;
+      --error-border:#FCA5A5;
+      --success-bg:  #F0FDF4;
+      --success-border:#86EFAC;
+      --green:       #6B7E6E;
+    }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
@@ -12,231 +37,570 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #0a0a0f;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      color: #e8e8f0;
+      /* Exact same backdrop as the modal overlay in luni.ca */
+      background: radial-gradient(ellipse at 50% 0%, #EAD9BE 0%, #F5F4F2 60%);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: var(--dark);
       padding: 24px;
+      -webkit-font-smoothing: antialiased;
     }
 
+    /* Card — exact match to AuthModal container */
     .card {
+      background: var(--cream);
+      border-radius: 24px;
+      padding: 36px 36px 32px;
       width: 100%;
       max-width: 400px;
-      background: #12121a;
-      border: 1px solid #1e1e2e;
-      border-radius: 20px;
-      padding: 40px 36px;
-      box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+      box-shadow: 0 40px 100px rgba(26,22,18,0.24);
+      position: relative;
+      animation: modalIn 0.22s cubic-bezier(0.16,1,0.3,1);
     }
 
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(12px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Logo row — exact match */
     .logo-row {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-bottom: 28px;
+      margin-bottom: 22px;
     }
 
-    .logo-mark {
-      width: 36px;
-      height: 36px;
-      background: linear-gradient(135deg, #7c6af7 0%, #5b8bf5 100%);
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
-      font-size: 18px;
-      color: #fff;
-      letter-spacing: -1px;
+    .logo-img {
+      width: 38px;
+      height: 38px;
+      object-fit: contain;
+      flex-shrink: 0;
+      display: block;
     }
 
     .logo-name {
-      font-size: 22px;
+      font-size: 15px;
       font-weight: 700;
-      color: #fff;
-      letter-spacing: -0.5px;
-    }
-
-    .heading {
-      font-size: 22px;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 6px;
+      color: var(--dark);
       letter-spacing: -0.3px;
     }
 
-    .subheading {
-      font-size: 14px;
-      color: #888;
-      margin-bottom: 32px;
-      line-height: 1.5;
+    .logo-sub {
+      font-size: 11px;
+      color: var(--ink-mid);
     }
 
-    .context-badge {
+    /* Claude context badge — sits right under logo */
+    .claude-badge {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: #1a1a2e;
-      border: 1px solid #2a2a4a;
-      border-radius: 20px;
-      padding: 5px 12px;
-      font-size: 12px;
-      color: #7c6af7;
-      margin-bottom: 24px;
-      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--ink-mid);
+      letter-spacing: 0.2px;
+      margin-bottom: 20px;
     }
 
-    .context-badge svg {
-      width: 14px;
-      height: 14px;
+    .claude-badge-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--brown);
+      border-radius: 50%;
       flex-shrink: 0;
     }
 
-    .field {
-      margin-bottom: 16px;
+    /* Heading — exact match */
+    h2 {
+      font-size: 21px;
+      font-weight: 700;
+      color: var(--dark);
+      letter-spacing: -0.5px;
+      margin-bottom: 4px;
     }
 
-    label {
+    .subtitle {
+      font-size: 14px;
+      color: var(--ink-mid);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    /* Google button — exact match: gradient, border, radius, shadow */
+    .google-btn {
+      width: 100%;
+      height: 52px;
+      margin-bottom: 18px;
+      background: linear-gradient(135deg, var(--gold-start), var(--gold-end));
+      border: 1px solid var(--gold-border);
+      border-radius: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 1px 4px rgba(176,165,144,0.5);
+      transition: opacity 0.15s;
+      font-family: inherit;
+    }
+
+    .google-btn:hover:not(:disabled) { opacity: 0.86; }
+    .google-btn:disabled { opacity: 0.75; cursor: wait; }
+
+    .google-btn-label {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--dark);
+      letter-spacing: -0.1px;
+    }
+
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background: var(--card-border);
+    }
+
+    .divider-text {
+      font-size: 12px;
+      color: var(--ink-light);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    /* Tab switcher — exact match */
+    .tab-row {
+      display: flex;
+      gap: 4px;
+      background: var(--card);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 20px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 8px;
+      border-radius: 7px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      transition: all 0.15s;
+      background: transparent;
+      color: var(--ink-mid);
+    }
+
+    .tab-btn.active {
+      background: var(--cream);
+      color: var(--dark);
+      box-shadow: 0 1px 4px rgba(26,22,18,0.08);
+    }
+
+    /* Input — exact match */
+    .field { margin-bottom: 14px; }
+
+    .field label {
       display: block;
       font-size: 13px;
       font-weight: 500;
-      color: #aaa;
-      margin-bottom: 7px;
-      letter-spacing: 0.2px;
+      color: var(--dark);
+      margin-bottom: 6px;
     }
 
-    input[type="email"],
-    input[type="password"] {
+    .field input {
       width: 100%;
-      padding: 13px 16px;
-      background: #0d0d15;
-      border: 1px solid #1e1e2e;
+      padding: 12px 14px;
+      border: 1.5px solid var(--card-border);
       border-radius: 12px;
-      color: #e8e8f0;
-      font-size: 15px;
+      font-size: 14px;
+      color: var(--dark);
+      background: var(--cream);
       outline: none;
       transition: border-color 0.15s;
+      font-family: inherit;
     }
 
-    input[type="email"]:focus,
-    input[type="password"]:focus {
-      border-color: #7c6af7;
-    }
+    .field input:focus { border-color: var(--brown); }
+    .field input::placeholder { color: var(--ink-light); }
 
-    input::placeholder { color: #444; }
-
-    .error-box {
-      background: #1a0d0d;
-      border: 1px solid #4a1a1a;
+    /* Error / success boxes — exact match */
+    .msg-box {
+      padding: 10px 14px;
       border-radius: 10px;
-      padding: 12px 14px;
+      margin-bottom: 14px;
       font-size: 13px;
-      color: #f08080;
-      margin-bottom: 18px;
+      line-height: 1.5;
       display: none;
     }
 
-    .error-box.visible { display: block; }
+    .msg-box.visible { display: block; }
 
+    .msg-box.error {
+      background: var(--error-bg);
+      border: 1px solid var(--error-border);
+      color: var(--error);
+    }
+
+    .msg-box.success {
+      background: var(--success-bg);
+      border: 1px solid var(--success-border);
+      color: var(--green);
+    }
+
+    /* Submit button — exact match: dark bg, cream text */
     .submit-btn {
       width: 100%;
-      padding: 14px;
-      background: linear-gradient(135deg, #7c6af7 0%, #5b8bf5 100%);
+      padding: 13px;
+      background: var(--dark);
+      color: var(--cream);
       border: none;
       border-radius: 12px;
-      color: #fff;
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      transition: opacity 0.15s, transform 0.1s;
-      margin-top: 8px;
-      letter-spacing: 0.1px;
+      transition: background 0.15s;
+      letter-spacing: -0.1px;
+      font-family: inherit;
     }
 
-    .submit-btn:hover { opacity: 0.9; }
-    .submit-btn:active { transform: scale(0.99); }
-    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .submit-btn:hover:not(:disabled) { background: #2e2820; }
+    .submit-btn:disabled { background: var(--card-border); cursor: not-allowed; }
 
-    .divider {
-      height: 1px;
-      background: #1e1e2e;
-      margin: 28px 0;
-    }
-
-    .privacy-note {
-      font-size: 12px;
-      color: #555;
+    /* Footer — exact match */
+    .footer-links {
       text-align: center;
-      line-height: 1.6;
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--ink-mid);
     }
 
-    .privacy-note a {
-      color: #7c6af7;
-      text-decoration: none;
+    .link-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--brown);
+      font-weight: 500;
+      font-size: 13px;
+      font-family: inherit;
+      padding: 0;
+    }
+
+    /* Loading overlay */
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(26,22,18,0.45);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 14px;
+      z-index: 10;
+    }
+
+    .loading-overlay.visible { display: flex; }
+
+    .loading-card {
+      background: var(--cream);
+      border-radius: 16px;
+      padding: 28px 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 20px 60px rgba(26,22,18,0.3);
+    }
+
+    .spinner {
+      width: 26px;
+      height: 26px;
+      border: 2.5px solid var(--card-border);
+      border-top-color: var(--brown);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-text {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink-mid);
     }
   </style>
 </head>
 <body>
+
+  <!-- Loading overlay shown during Google OAuth / MCP completion -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-card">
+      <div class="spinner"></div>
+      <span class="loading-text" id="loadingText">Connecting…</span>
+    </div>
+  </div>
+
   <div class="card">
+
+    <!-- Logo — uses the exact luni_logo_official.png hosted on luni.ca -->
     <div class="logo-row">
-      <div class="logo-mark">L</div>
-      <span class="logo-name">Luni</span>
+      <img class="logo-img" src="https://luni.ca/luni_logo_official.png" alt="Luni" />
+      <div>
+        <div class="logo-name">Luni</div>
+        <div class="logo-sub">Connecting to Claude</div>
+      </div>
     </div>
 
-    <div class="context-badge">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-        <path d="M2 17l10 5 10-5"/>
-        <path d="M2 12l10 5 10-5"/>
+    <!-- Heading -->
+    <h2 id="heading">Welcome back</h2>
+    <p class="subtitle" id="subtitle">Sign in to your Luni account.</p>
+
+    <!-- Error / success -->
+    <div class="msg-box error" id="errorBox"></div>
+    <div class="msg-box success" id="successBox"></div>
+
+    <!-- Google button — exact AuthModal style -->
+    <button class="google-btn" id="googleBtn" type="button">
+      <!-- Exact Google logo from App.jsx -->
+      <svg width="20" height="20" viewBox="0 0 24 24">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
       </svg>
-      Connecting to Claude
+      <span class="google-btn-label" id="googleLabel">Continue with Google</span>
+    </button>
+
+    <!-- Divider -->
+    <div class="divider" id="emailDivider">
+      <div class="divider-line"></div>
+      <span class="divider-text" id="dividerText">or continue with email</span>
+      <div class="divider-line"></div>
     </div>
 
-    <h1 class="heading">Sign in to Luni</h1>
-    <p class="subheading">Claude is requesting access to your Luni account. Sign in to allow it to see only your financial data.</p>
+    <!-- Tab row — Sign In / Sign Up (hidden in magic mode) -->
+    <div class="tab-row" id="tabRow">
+      <button class="tab-btn active" id="tabSignIn" type="button">Sign In</button>
+      <button class="tab-btn"        id="tabSignUp" type="button">Sign Up</button>
+    </div>
 
-    <div class="error-box __ERROR_CLASS__" id="errorBox">__ERROR__</div>
-
-    <form method="POST" action="/oauth/login" id="loginForm">
+    <!-- Form -->
+    <form id="loginForm" method="POST" action="/oauth/login">
+      <!-- MCP params (injected by server) -->
       <input type="hidden" name="client_id"      value="__CLIENT_ID__" />
       <input type="hidden" name="redirect_uri"   value="__REDIRECT_URI__" />
       <input type="hidden" name="state"          value="__STATE__" />
       <input type="hidden" name="code_challenge" value="__CODE_CHALLENGE__" />
       <input type="hidden" name="scope"          value="__SCOPE__" />
+      <input type="hidden" name="mode"           id="modeField" value="signin" />
 
       <div class="field">
         <label for="email">Email</label>
-        <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email" required />
+        <input type="email" id="email" name="email" placeholder="you@example.com"
+               autocomplete="email" required />
       </div>
 
-      <div class="field">
+      <div class="field" id="passwordWrap">
         <label for="password">Password</label>
-        <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password" required />
+        <input type="password" id="password" name="password" placeholder="••••••••"
+               autocomplete="current-password" />
       </div>
 
-      <button type="submit" class="submit-btn" id="submitBtn">Sign in &amp; Connect</button>
+      <button type="submit" class="submit-btn" id="submitBtn">Sign In</button>
     </form>
 
-    <div class="divider"></div>
-
-    <p class="privacy-note">
-      Only your transactions, budgets, and account data will be shared — nothing else.<br/>
-      <a href="https://luni.ca/privacy" target="_blank">Privacy policy</a>
+    <!-- Footer -->
+    <p class="footer-links" id="footerLinks">
+      Forgot password?&nbsp;<button class="link-btn" id="magicBtn">Use a magic link</button>
     </p>
+
   </div>
 
   <script>
-    // Show error box if server injected an error message
-    const errorBox = document.getElementById('errorBox');
-    if (errorBox && errorBox.textContent.trim().length > 0 && !errorBox.textContent.includes('__ERROR__')) {
-      errorBox.classList.add('visible');
+    // ── Config injected by the MCP server ──────────────────────────────────
+    const SUPABASE_URL      = '__SUPABASE_URL__';
+    const SUPABASE_ANON_KEY = '__SUPABASE_ANON_KEY__';
+    const MCP = {
+      client_id:      '__CLIENT_ID__',
+      redirect_uri:   '__REDIRECT_URI__',
+      state:          '__STATE__',
+      code_challenge: '__CODE_CHALLENGE__',
+      scope:          '__SCOPE__',
+    };
+
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ── DOM refs ────────────────────────────────────────────────────────────
+    const $  = (id) => document.getElementById(id);
+    const errorBox   = $('errorBox');
+    const successBox = $('successBox');
+    const submitBtn  = $('submitBtn');
+    const googleBtn  = $('googleBtn');
+    const overlay    = $('loadingOverlay');
+
+    function showError(msg)   { errorBox.textContent = msg;   errorBox.classList.add('visible');   successBox.classList.remove('visible'); }
+    function showSuccess(msg) { successBox.textContent = msg; successBox.classList.add('visible'); errorBox.classList.remove('visible'); }
+    function clearMsgs()      { errorBox.classList.remove('visible'); successBox.classList.remove('visible'); }
+    function showLoading(msg) { $('loadingText').textContent = msg || 'Connecting…'; overlay.classList.add('visible'); }
+
+    // ── Mode state ──────────────────────────────────────────────────────────
+    let mode = 'signin';
+
+    function setMode(m) {
+      mode = m;
+      clearMsgs();
+      $('modeField').value = m;
+
+      const isMagic = m === 'magic';
+      googleBtn.parentElement && (googleBtn.style.display = isMagic ? 'none' : '');
+      $('emailDivider').style.display = '';
+      $('dividerText').textContent = isMagic ? 'enter your email below' : 'or continue with email';
+      $('tabRow').style.display = isMagic ? 'none' : '';
+      $('passwordWrap').style.display = isMagic ? 'none' : '';
+      submitBtn.textContent = m === 'signin' ? 'Sign In' : m === 'signup' ? 'Create Account' : 'Send Magic Link';
+      $('heading').textContent = m === 'magic' ? 'Magic link' : m === 'signup' ? 'Create account' : 'Welcome back';
+      $('subtitle').textContent = m === 'signin'  ? 'Sign in to your Luni account.'
+                                : m === 'signup'  ? 'Start your financial clarity journey.'
+                                : "We'll email you a one-click sign-in link.";
+      $('footerLinks').innerHTML = isMagic
+        ? '<button class="link-btn" id="backBtn">← Back to sign in</button>'
+        : 'Forgot password?&nbsp;<button class="link-btn" id="magicBtn">Use a magic link</button>';
+      bindFooter();
+
+      [$('tabSignIn'), $('tabSignUp')].forEach(b => b && b.classList.remove('active'));
+      if (m === 'signin' && $('tabSignIn')) $('tabSignIn').classList.add('active');
+      if (m === 'signup' && $('tabSignUp')) $('tabSignUp').classList.add('active');
     }
 
-    // Disable button while submitting
-    document.getElementById('loginForm').addEventListener('submit', () => {
-      const btn = document.getElementById('submitBtn');
-      btn.disabled = true;
-      btn.textContent = 'Signing in…';
+    function bindFooter() {
+      const magic = $('magicBtn');
+      const back  = $('backBtn');
+      if (magic) magic.addEventListener('click', () => setMode('magic'));
+      if (back)  back.addEventListener('click', () => setMode('signin'));
+    }
+    bindFooter();
+
+    $('tabSignIn').addEventListener('click', () => setMode('signin'));
+    $('tabSignUp').addEventListener('click', () => setMode('signup'));
+
+    // ── Email/password form submit ───────────────────────────────────────────
+    // Falls through to the native form POST for signin/signup (server handles it).
+    // For magic link, we intercept and call Supabase directly.
+    $('loginForm').addEventListener('submit', async (e) => {
+      if (mode !== 'magic') {
+        // Let the form POST to /oauth/login normally
+        clearMsgs();
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Please wait…';
+        return; // allow normal form submission
+      }
+
+      // Magic link — handle client-side
+      e.preventDefault();
+      clearMsgs();
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending…';
+
+      const email = $('email').value.trim();
+      if (!email) { showError('Enter your email first.'); submitBtn.disabled = false; submitBtn.textContent = 'Send Magic Link'; return; }
+
+      const { error } = await db.auth.signInWithOtp({
+        email,
+        options: { shouldCreateUser: false },
+      });
+
+      if (error) {
+        showError(error.message);
+      } else {
+        showSuccess('Check your inbox — a magic link is on its way.');
+      }
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Send Magic Link';
     });
+
+    // ── Google sign-in ──────────────────────────────────────────────────────
+    googleBtn.addEventListener('click', async () => {
+      clearMsgs();
+      googleBtn.disabled = true;
+      $('googleLabel').textContent = 'Connecting…';
+      showLoading('Redirecting to Google…');
+
+      const { error } = await db.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          // Redirect back to THIS exact URL so the MCP params survive
+          redirectTo: window.location.href,
+          queryParams: { access_type: 'offline', prompt: 'select_account' },
+        },
+      });
+
+      if (error) {
+        overlay.classList.remove('visible');
+        googleBtn.disabled = false;
+        $('googleLabel').textContent = 'Continue with Google';
+        showError(error.message);
+      }
+      // If no error, browser redirects — no further code runs
+    });
+
+    // ── Handle return from Google OAuth ────────────────────────────────────
+    // After Google completes, Supabase redirects back here with ?code=...
+    // The Supabase SDK auto-detects it (detectSessionInUrl: true by default)
+    // and fires onAuthStateChange with SIGNED_IN.
+    const isOAuthReturn = new URLSearchParams(window.location.search).has('code')
+                       || window.location.hash.includes('access_token');
+
+    if (isOAuthReturn) {
+      showLoading('Signing you in…');
+    }
+
+    db.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session && isOAuthReturn) {
+        showLoading('Connecting to Claude…');
+        try {
+          const resp = await fetch('/oauth/google-complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ...MCP,
+              access_token:  session.access_token,
+              refresh_token: session.refresh_token,
+              user_id:       session.user.id,
+            }),
+          });
+          const data = await resp.json();
+          if (data.redirect_url) {
+            window.location.href = data.redirect_url;
+          } else {
+            overlay.classList.remove('visible');
+            showError(data.error || 'Something went wrong. Please try again.');
+          }
+        } catch {
+          overlay.classList.remove('visible');
+          showError('Connection failed. Please try again.');
+        }
+      }
+    });
+
+    // ── Show server-injected error (from email/password POST) ───────────────
+    const serverError = '__ERROR__';
+    if (serverError && !serverError.includes('__ERROR__') && serverError.trim()) {
+      showError(serverError);
+    }
   </script>
 </body>
 </html>

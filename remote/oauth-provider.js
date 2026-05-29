@@ -115,12 +115,14 @@ export class LuniOAuthProvider {
     const { codeChallenge, redirectUri, state, scopes } = params;
 
     const html = readFileSync(join(__dirname, 'login.html'), 'utf-8')
-      .replaceAll('__CLIENT_ID__',      client.client_id)
-      .replaceAll('__REDIRECT_URI__',   redirectUri ?? '')
-      .replaceAll('__STATE__',          state ?? '')
-      .replaceAll('__CODE_CHALLENGE__', codeChallenge)
-      .replaceAll('__SCOPE__',          (scopes ?? ['luni:read']).join(' '))
-      .replaceAll('__ERROR__',          '');
+      .replaceAll('__CLIENT_ID__',        client.client_id)
+      .replaceAll('__REDIRECT_URI__',     redirectUri ?? '')
+      .replaceAll('__STATE__',            state ?? '')
+      .replaceAll('__CODE_CHALLENGE__',   codeChallenge)
+      .replaceAll('__SCOPE__',            (scopes ?? ['luni:read']).join(' '))
+      .replaceAll('__ERROR__',            '')
+      .replaceAll('__SUPABASE_URL__',     SUPABASE_URL)
+      .replaceAll('__SUPABASE_ANON_KEY__', ANON_KEY);
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(html);
@@ -242,12 +244,14 @@ export async function handleLoginSubmit(req, res) {
 
   const renderError = (message) => {
     const html = readFileSync(join(__dirname, 'login.html'), 'utf-8')
-      .replaceAll('__CLIENT_ID__',      client_id ?? '')
-      .replaceAll('__REDIRECT_URI__',   redirect_uri ?? '')
-      .replaceAll('__STATE__',          state ?? '')
-      .replaceAll('__CODE_CHALLENGE__', code_challenge ?? '')
-      .replaceAll('__SCOPE__',          scope ?? 'luni:read')
-      .replaceAll('__ERROR__',          message);
+      .replaceAll('__CLIENT_ID__',        client_id ?? '')
+      .replaceAll('__REDIRECT_URI__',     redirect_uri ?? '')
+      .replaceAll('__STATE__',            state ?? '')
+      .replaceAll('__CODE_CHALLENGE__',   code_challenge ?? '')
+      .replaceAll('__SCOPE__',            scope ?? 'luni:read')
+      .replaceAll('__ERROR__',            message)
+      .replaceAll('__SUPABASE_URL__',     SUPABASE_URL)
+      .replaceAll('__SUPABASE_ANON_KEY__', ANON_KEY);
     return res.status(401).setHeader('Content-Type', 'text/html; charset=utf-8').send(html);
   };
 
@@ -330,4 +334,56 @@ export async function getSupabaseJwtForMcpToken(mcpToken) {
     .eq('access_token', mcpToken);
 
   return refreshed.session.access_token;
+}
+
+// ── Google OAuth completion ────────────────────────────────────────────────────
+// Called client-side (via fetch) after the Supabase Google OAuth redirect.
+// The login.html JS sends us the Supabase session tokens + MCP params.
+// We verify the session, create an MCP auth code, and return the redirect URL.
+
+export async function handleGoogleComplete(req, res) {
+  const { client_id, redirect_uri, state, code_challenge, scope,
+          access_token, refresh_token, user_id } = req.body;
+
+  if (!access_token || !refresh_token || !user_id || !client_id || !redirect_uri || !code_challenge) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  try {
+    // Verify the Supabase session is real and belongs to user_id
+    const { data: { user }, error: userError } = await adminDb.auth.admin.getUserById(user_id);
+    if (userError || !user) {
+      return res.status(401).json({ error: 'Invalid Supabase session' });
+    }
+
+    // Generate MCP auth code
+    const authCode  = crypto.randomBytes(24).toString('hex');
+    const expiresAt = new Date(Date.now() + AUTH_CODE_TTL_SEC * 1000).toISOString();
+
+    const { error: insertError } = await adminDb.from('mcp_oauth_sessions').insert({
+      user_id:               user.id,
+      auth_code:             authCode,
+      code_challenge:        code_challenge,
+      redirect_uri:          redirect_uri,
+      client_id:             client_id,
+      scope:                 scope || 'luni:read',
+      auth_code_expires_at:  expiresAt,
+      supabase_refresh_token: refresh_token,
+    });
+
+    if (insertError) {
+      console.error('[oauth] google-complete insert error:', insertError.message);
+      return res.status(500).json({ error: 'Failed to create session' });
+    }
+
+    // Build the redirect URL for Claude's callback
+    const callbackUrl = new URL(redirect_uri);
+    callbackUrl.searchParams.set('code', authCode);
+    if (state) callbackUrl.searchParams.set('state', state);
+
+    res.json({ redirect_url: callbackUrl.toString() });
+  } catch (err) {
+    console.error('[oauth] google-complete error:', err.message);
+    res.status(500).json({ error: 'Authentication failed' });
+  }
 }
