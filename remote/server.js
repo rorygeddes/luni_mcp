@@ -65,6 +65,7 @@ if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY || !proc
 // ── Express app ───────────────────────────────────────────────────────────────
 
 const app = express();
+app.set('trust proxy', 1); // Required for Vercel: allows express-rate-limit to read X-Forwarded-For
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // for login form POST body
 
