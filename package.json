@@ -5,11 +5,12 @@
   "type": "module",
   "main": "server.js",
   "scripts": {
-    "build":        "echo 'No build step required'",
-    "start":        "node server.js",
-    "dev":          "node --watch server.js",
+    "build": "echo 'No build step required'",
+    "start": "node server.js",
+    "dev": "node --watch server.js",
     "start:remote": "node remote/server.js",
-    "dev:remote":   "node --watch remote/server.js"
+    "dev:remote": "node --watch remote/server.js",
+    "dev:skybridge": "NODE_ENV=development node --env-file=../luni_app/.env --env-file=.env.local dev/local-server.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
@@ -19,5 +20,9 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@skybridge/devtools": "^1.0.3",
+    "skybridge": "^1.0.3"
   }
 }
