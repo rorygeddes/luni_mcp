@@ -5,6 +5,7 @@
   "type": "module",
   "main": "server.js",
   "scripts": {
+    "build":        "echo 'No build step required'",
     "start":        "node server.js",
     "dev":          "node --watch server.js",
     "start:remote": "node remote/server.js",
